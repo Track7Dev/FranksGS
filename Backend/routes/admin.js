@@ -1,16 +1,16 @@
 const bcrypt = require('bcrypt');
-const jwt = require('jwt-simple');
-const secret = require('../config').secret;
+const jwt = require('jsonwebtoken');
+const secret = process.env.KEY_ACCESS;
 const Admin = require('./models/admin');
 
 const adminLogin = (req, res) => {
-  const {username, password} = req.body;
+  const {username, password} = jwt.decode(req.body, secret);
   const regex = new RegExp(["^", username, "$"].join(""), "i");
   Admin.findOne({username: regex})
   .then((user) => bcrypt.compare(password, user.hash, (err, same) => {
     user.tKey = Math.floor(Math.random() * (777777777 - 777) + 777);
     user.save();
-    err || !same ? res.json('Credentials Dont Match') : res.json({token: jwt.encode({username: user.username, hash: user.hash, key: user.tKey}, secret)});
+    err || !same ? res.json('Credentials Dont Match') : res.json({token: jwt.sign({username: user.username, hash: user.hash, key: user.tKey}, secret)});
   }))
   .catch((err) => res.status(422).json('Credentials Dont Match'))
 };
@@ -22,7 +22,7 @@ const createAdmin = (req, res) => {
     if(err) return res.status(422).json('HASH ERROR');
     const admin = new Admin({username, hash, name});
     admin.save((err) => {
-      return err ? res.status(500).json(err) : res.json({token: jwt.encode({username, hash}, secret), message: `Successfully Added ${username}`});
+      return err ? res.status(500).json(err) : res.json({token: jwt.sign({username, hash}, secret), message: `Successfully Added ${username}`});
     }); 
   });
 };

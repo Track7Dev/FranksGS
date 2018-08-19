@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const server = require('./server');
+require('dotenv').config();
 const port = process.env.port || 7777;
 mongoose.Promise = global.Promise;
 mongoose.connect('mongodb://localhost/fgs', { useMongoClient: true })
